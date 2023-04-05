@@ -235,7 +235,7 @@ contract IDO is ReentrancyGuard, Ownable {
                 owner,
                 msg.sender,
                 amount,
-                tokenAddress,
+                project.tokenAddress,
                 project.shouldBePaidInThisToken
             );
             amountToSendTheOwner = amount - (3 * amount) / 1000;
