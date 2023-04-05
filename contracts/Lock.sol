@@ -31,6 +31,33 @@ contract IDO is ReentrancyGuard, Ownable {
     error TotalSupplyNotMultipleOfRate();
     error TarnsferAmountFailed();
 
+    // events
+
+    event AddingTokenForEth(
+        address indexed owner,
+        uint indexed amount,
+        address indexed tokenAddress
+    );
+    event AddingTokenForToken(
+        address indexed owner,
+        uint indexed amount,
+        address indexed tokenAddress,
+        address shouldBePaidInThisToken
+    );
+    event BuyingTokenForEth(
+        address indexed owner,
+        address indexed buyer,
+        uint indexed projectIndex,
+        uint amount
+    );
+    event BuyingTokenForToken(
+        address indexed owner,
+        address buyer,
+        uint indexed amount,
+        address indexed tokenAddress,
+        address shouldBePaidInThisToken
+    );
+
     modifier initialSatisfy(
         uint256 rate,
         address _tokenAddress,
@@ -149,29 +176,36 @@ contract IDO is ReentrancyGuard, Ownable {
         external
         initialSatisfy(rate, tokenAddress, totalSupply, address(0), true)
     {
+        emit AddingTokenForEth(msg.sender, totalSupply, tokenAddress);
         addProject(totalSupply, rate, tokenAddress, address(0), true);
     }
 
     function putProjectForToken(
-        uint256 rate,
-        address tokenAddress,
-        uint256 totalSupply,
-        address shouldBePaidInThisToken
+        uint256 _rate,
+        address _tokenAddress,
+        uint256 _totalSupply,
+        address _shouldBePaidInThisToken
     )
         external
         initialSatisfy(
-            rate,
-            tokenAddress,
-            totalSupply,
-            shouldBePaidInThisToken,
+            _rate,
+            _tokenAddress,
+            _totalSupply,
+            _shouldBePaidInThisToken,
             false
         )
     {
+        emit AddingTokenForToken(
+            msg.sender,
+            _totalSupply,
+            _tokenAddress,
+            _shouldBePaidInThisToken
+        );
         addProject(
-            totalSupply,
-            rate,
-            tokenAddress,
-            shouldBePaidInThisToken,
+            _totalSupply,
+            _rate,
+            _tokenAddress,
+            _shouldBePaidInThisToken,
             false
         );
     }
@@ -187,6 +221,7 @@ contract IDO is ReentrancyGuard, Ownable {
         if (project.acceptingETH) {
             amountOut = project.rate * msg.value;
             amountToSendTheOwner = msg.value - (3 * msg.value) / 1000;
+            emit BuyingTokenForEth(owner, msg.sender, projectIndex, amountOut);
 
             (bool sent, bytes memory data) = project.owner.call{
                 value: amountToSendTheOwner
@@ -196,6 +231,13 @@ contract IDO is ReentrancyGuard, Ownable {
             }
         } else {
             amountOut = project.rate * amount;
+            emit BuyingTokenForToken(
+                owner,
+                msg.sender,
+                amount,
+                tokenAddress,
+                project.shouldBePaidInThisToken
+            );
             amountToSendTheOwner = amount - (3 * amount) / 1000;
             IERC20(project.shouldBePaidInThisToken).transferFrom(
                 msg.sender,
