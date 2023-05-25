@@ -90,7 +90,7 @@ contract IDO is ReentrancyGuard, Ownable {
         view
         returns (uint256, uint256, address, address, bool, uint256)
     {
-        Project storage project = projectsByOwner[owner][projectIndex];
+        Project memory project = projectsByOwner[owner][projectIndex];
         return (
             project.totalSupply,
             project.rate,
@@ -106,9 +106,7 @@ contract IDO is ReentrancyGuard, Ownable {
     ) external view returns (Project[] memory projectArray) {
         uint projectLength = projectsByOwner[owner].length;
         projectArray = new Project[](projectLength);
-        for (uint i = 0; i < projectLength; unchecked_inc(i)) {
-            projectArray[i] = projectsByOwner[owner][i];
-        }
+        projectArray = projectsByOwner[owner];
     }
 
     function getAddresses()
@@ -118,9 +116,7 @@ contract IDO is ReentrancyGuard, Ownable {
     {
         uint addressLength = AddressArray.length;
         addressArray = new address[](addressLength);
-        for (uint i = 0; i < addressLength; unchecked_inc(i)) {
-            addressArray[i] = AddressArray[i];
-        }
+        addressArray = AddressArray;
     }
 
     function AddTokenToTheContract(
@@ -215,7 +211,7 @@ contract IDO is ReentrancyGuard, Ownable {
         uint256 projectIndex,
         uint amount
     ) external payable nonReentrant {
-        Project storage project = projectsByOwner[owner][projectIndex];
+        Project memory project = projectsByOwner[owner][projectIndex];
         uint amountOut;
         uint amountToSendTheOwner;
         if (project.acceptingETH) {
@@ -223,7 +219,7 @@ contract IDO is ReentrancyGuard, Ownable {
             amountToSendTheOwner = msg.value - (3 * msg.value) / 1000;
             emit BuyingTokenForEth(owner, msg.sender, projectIndex, amountOut);
 
-            (bool sent, bytes memory data) = project.owner.call{
+            (bool sent, ) = project.owner.call{
                 value: amountToSendTheOwner
             }("");
             if (!sent) {
@@ -279,12 +275,5 @@ contract IDO is ReentrancyGuard, Ownable {
         projectsByOwner[owner][projectIndex].rate = newRate;
     }
 
-    // Pure Functions
 
-    function unchecked_inc(uint i) internal pure returns (uint) {
-        unchecked {
-            i++;
-        }
-        return i;
-    }
 }
