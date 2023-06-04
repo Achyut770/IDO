@@ -103,20 +103,16 @@ contract IDO is ReentrancyGuard, Ownable {
 
     function getProjectsByOwner(
         address owner
-    ) external view returns (Project[] memory projectArray) {
-        uint projectLength = projectsByOwner[owner].length;
-        projectArray = new Project[](projectLength);
-        projectArray = projectsByOwner[owner];
+    ) external view returns (Project[] memory) {
+        return projectsByOwner[owner];
     }
 
     function getAddresses()
         external
         view
-        returns (address[] memory addressArray)
+        returns (address[] memory )
     {
-        uint addressLength = AddressArray.length;
-        addressArray = new address[](addressLength);
-        addressArray = AddressArray;
+       return AddressArray;
     }
 
     function AddTokenToTheContract(
@@ -267,12 +263,11 @@ contract IDO is ReentrancyGuard, Ownable {
         IERC20(tokenAddress).transfer(msg.sender, amount);
     }
 
-    function changeRateOfProject(
-        address owner,
+    function changeRateOfProject( 
         uint projectIndex,
         uint newRate
     ) external {
-        projectsByOwner[owner][projectIndex].rate = newRate;
+        projectsByOwner[msg.sender][projectIndex].rate = newRate;
     }
 
 
